@@ -1,0 +1,12 @@
+
+# Rust
+target/
+**/*.rs.bk
+Cargo.lock
+
+# System
+.DS_Store
+.check-status
+
+# stored
+/assets

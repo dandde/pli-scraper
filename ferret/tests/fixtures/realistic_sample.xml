@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="tipitaka-latn.xsl"?>
+<TEI.2>
+  <teiHeader/>
+  <text>
+    <front/>
+    <body xml:space="preserve">
+      <p rend="centre"> Namo tassa bhagavato arahato sammāsambuddhassa</p>
+      <p rend="nikaya">Dīghanikāyo</p>
+      <div id="dn1" n="dn1" type="book">
+        <head rend="book">Sīlakkhandhavaggapāḷi</head>
+        <div id="dn1_1" n="dn1_1" type="sutta">
+          <head rend="chapter">1. Brahmajālasuttaṃ</head>
+          <p rend="subhead">Paribbājakakathā</p>
+          <p rend="bodytext" n="1">
+            <hi rend="paranum">1</hi>
+            <hi rend="dot">.</hi> Evaṃ <pb ed="M" n="1.0001"/><pb ed="V" n="1.0001"/><pb ed="P" n="1.0001"/><pb ed="T" n="1.0001"/> me sutaṃ – ekaṃ samayaṃ bhagavā antarā ca rājagahaṃ antarā ca nāḷandaṃ addhānamaggappaṭipanno hoti mahatā bhikkhusaṅghena saddhiṃ pañcamattehi bhikkhusatehi. 
+          </p>
+        </div>
+      </div>
+    </body>
+  </text>
+</TEI.2>

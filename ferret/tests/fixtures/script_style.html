@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            color: red;
+        }
+
+        div {
+            content: "</div>";
+        }
+
+        /* CSS syntax that looks like HTML */
+    </style>
+</head>
+
+<body>
+    <div id="content">Visible</div>
+    <script>
+        const x = "<div>Hidden</div>";
+        if (x < 10) { console.log("math"); }
+    </script>
+    <script type="text/template">
+        <span>Template content (should be ignored by walker?)</span>
+    </script>
+</body>
+
+</html>

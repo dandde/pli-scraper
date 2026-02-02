@@ -1,0 +1,40 @@
+[workspace]
+resolver = "2"
+
+members = ["ferret"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = []
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+# HTTP client for URL fetching
+reqwest = "0.11"
+
+# XML/HTML Parsing
+quick-xml = "0.31"  # For StreamAnalyzer (streaming parser)
+tl = "0.7.7"          # For StatsAnalyzer (in-memory DOM parser)
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+
+# For batch/concurrent operations
+futures = "0.3"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+[profile.dev]
+opt-level = 0
