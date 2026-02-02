@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 
-members = ["ferret"]
+members = ["ferret", "ferret_server"]
 
 [workspace.package]
 version = "0.1.0"
@@ -14,8 +14,8 @@ license = "MIT OR Apache-2.0"
 reqwest = "0.11"
 
 # XML/HTML Parsing
-quick-xml = "0.31"  # For StreamAnalyzer (streaming parser)
-tl = "0.7.7"          # For StatsAnalyzer (in-memory DOM parser)
+quick-xml = "0.31" # For StreamAnalyzer (streaming parser)
+tl = "0.7.7"       # For StatsAnalyzer (in-memory DOM parser)
 
 # Error handling
 anyhow = "1.0"
@@ -30,6 +30,11 @@ tokio = { version = "1.35", features = ["full"] }
 
 # For batch/concurrent operations
 futures = "0.3"
+
+# utils
+colored = "3.1"
+indicatif = "0.17"
+
 
 [profile.release]
 opt-level = 3
