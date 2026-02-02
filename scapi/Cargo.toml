@@ -1,14 +1,17 @@
 [package]
-name = "ferret_server"
+name = "scapi"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 ferret = { path = "../ferret" }
-hyper = { version = "0.14", features = ["full"] }
+axum = { version = "0.7", features = ["macros"] }
+tower-http = { version = "0.5", features = ["cors", "trace"] }
 tokio = { workspace = true, features = ["full"] }
 reqwest = { workspace = true, features = ["json", "rustls-tls"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
 indicatif = { workspace = true }
+url = "2.5"
+tempfile = "3.10"

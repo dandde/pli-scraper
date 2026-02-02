@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ferret Graph Visualizer</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --line-color: #bec3c7;
+            --node-bg-element: rgb(206, 224, 244);
+            --node-bg-text: rgb(255, 222, 153);
+            --node-bg-comment: rgb(207, 206, 149);
+            --node-selected-border: #2196f3;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Consolas, Menlo, Monaco, monospace;
+            font-size: 14px;
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        #app {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+        }
+
+        #sidebar {
+            width: 300px;
+            border-right: 1px solid #ddd;
+            padding: 10px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            z-index: 10;
+            display: none;
+        }
+
+        #canvas-container {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+            cursor: grab;
+        }
+
+        #canvas-container:active {
+            cursor: grabbing;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .node rect {
+            stroke: none;
+            rx: 4;
+            transition: stroke-width 0.1s;
+        }
+
+        .node.selected rect {
+            stroke: var(--node-selected-border);
+            stroke-width: 2px;
+        }
+
+        .node text {
+            pointer-events: none;
+            dominant-baseline: middle;
+        }
+
+        .link {
+            fill: none;
+            stroke: var(--line-color);
+            stroke-width: 1.5px;
+        }
+
+        .toggle {
+            cursor: pointer;
+            fill: #666;
+        }
+
+        .toggle:hover {
+            fill: #333;
+        }
+
+        /* Utility */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div id="sidebar">
+            <h3>Details</h3>
+            <pre id="details-content"></pre>
+        </div>
+        <div id="canvas-container">
+            <svg id="viz">
+                <g id="transform-group">
+                    <g id="links"></g>
+                    <g id="nodes"></g>
+                </g>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Data Injection via Askama -->
+    <script>
+        // AnalysisResult is injected here as JSON
+        const RAW_DATA = {{ data| json | safe }};
+    </script>
+
+    <script>
+        // --- Transform Data to Tree Structure ---
+        // Ferret's AnalysisResult is flat (tags map). We convert it to a pseudo-tree for visualization.
+        function transformData(stats) {
+            const root = { id: "ROOT", name: "Analysis Result", type: "root", children: [], expanded: true };
+
+            // Sort tags by count
+            const sortedTags = Object.entries(stats.tags).sort((a, b) => b[1].count - a[1].count);
+
+            sortedTags.forEach(([tagName, tagStat]) => {
+                const tagNode = {
+                    id: `tag-${tagName}`,
+                    name: tagName,
+                    type: "element",
+                    count: tagStat.count,
+                    children: [],
+                    expanded: false
+                };
+
+                // Attributes
+                const sortedAttrs = Object.entries(tagStat.attributes).sort((a, b) => b[1].count - a[1].count);
+                sortedAttrs.forEach(([attrName, attrStat]) => {
+                    const attrNode = {
+                        id: `attr-${tagName}-${attrName}`,
+                        name: `@${attrName}`,
+                        type: "comment", // Use comment color for attrs roughly
+                        count: attrStat.count,
+                        children: [],
+                        expanded: false
+                    };
+
+                    // Values
+                    const sortedVals = Object.entries(attrStat.value_counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+                    sortedVals.forEach(([val, count], idx) => {
+                        attrNode.children.push({
+                            id: `val-${tagName}-${attrName}-${idx}`,
+                            name: `"${val}"`,
+                            type: "text", // Use text color for values
+                            count: count,
+                            children: [] // Leaf
+                        });
+                    });
+
+                    tagNode.children.push(attrNode);
+                });
+
+                root.children.push(tagNode);
+            });
+
+            return root;
+        }
+
+        const treeRoot = transformData(RAW_DATA);
+
+        // --- Layout Engine (Vertical Staircase) ---
+        const ROW_HEIGHT = 30;
+        const INDENT = 25;
+        const ORIGIN_X = 20;
+        const ORIGIN_Y = 30;
+
+        let visibleNodes = [];
+        let transform = { x: 0, y: 0, scale: 1 };
+        let isDragging = false;
+        let lastMouse = { x: 0, y: 0 };
+
+        const svg = document.getElementById('viz');
+        const gTransform = document.getElementById('transform-group');
+        const gNodes = document.getElementById('nodes');
+        const gLinks = document.getElementById('links');
+        const container = document.getElementById('canvas-container');
+        const sidebar = document.getElementById('sidebar');
+        const details = document.getElementById('details-content');
+
+        function flattenTree() {
+            visibleNodes = [];
+            let currentY = 0;
+
+            function traverse(node, depth) {
+                // Position logic
+                node.x = ORIGIN_X + depth * INDENT;
+                node.y = ORIGIN_Y + currentY * ROW_HEIGHT;
+
+                visibleNodes.push(node);
+                currentY++;
+
+                if (node.expanded && node.children.length > 0) {
+                    node.children.forEach(child => traverse(child, depth + 1));
+                }
+            }
+
+            traverse(treeRoot, 0);
+        }
+
+        function render() {
+            flattenTree();
+
+            // Clear existing
+            gNodes.innerHTML = '';
+            gLinks.innerHTML = '';
+
+            // Render Links (L-shaped)
+            visibleNodes.forEach(child => {
+                if (child === treeRoot) return;
+
+                // Find parent in visibleNodes is hard because we flattened traversal?
+                // Actually we need parent reference. 
+                // Let's assume parent is available or we can look it up. 
+                // Simple hack: traverse passes parent down, we store it.
+            });
+
+            // Re-traverse to draw based on current positions
+            // Drawing lines requires knowing parent's position. 
+            // Let's add parent ref during transform or flatten.
+
+            // Quick fix for parent ref:
+            function linkNodes(node) {
+                if (node.expanded) {
+                    node.children.forEach(child => {
+                        child.parent = node;
+                        linkNodes(child);
+                    });
+                }
+            }
+            linkNodes(treeRoot);
+
+            visibleNodes.forEach(node => {
+                if (node.parent && visibleNodes.includes(node.parent)) {
+                    // Draw L-shape
+                    // Start: Parent Toggle (Parent X - some offset usually, or bottom of parent?)
+                    // Design says: Parent's toggle point -> drop vertical -> shoot horizontal
+
+                    const pX = node.parent.x + 6; // Center of toggle roughly
+                    const pY = node.parent.y + 20; // Bottom of text line
+                    const cX = node.x - 10;
+                    const cY = node.y + 10; // Mid of row
+
+                    // Correct Logic: 
+                    // Vertical line from Parent Y+Offset down to Child Y
+                    // Horizontal line to Child X
+
+                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    path.setAttribute("class", "link");
+                    // Simple L: (Parent X + adjust, Parent Y + adjust) -> (Parent X + adjust, Child Y + adjust) -> (Child X, Child Y + adjust)
+                    // Visual alignment tuning needed.
+                    const vertX = node.parent.x + 6;
+                    const startY = node.parent.y + 20;
+                    const endY = node.y + 15; // Center of row roughly
+
+                    const d = `M ${vertX} ${startY} L ${vertX} ${endY} L ${node.x} ${endY}`;
+                    path.setAttribute("d", d);
+                    gLinks.appendChild(path);
+                }
+
+                // Render Node
+                const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                g.setAttribute("class", `node ${node.selected ? 'selected' : ''}`);
+                g.setAttribute("transform", `translate(${node.x}, ${node.y})`);
+                g.onclick = (e) => {
+                    e.stopPropagation();
+                    selectNode(node);
+                };
+                g.ondblclick = (e) => {
+                    e.stopPropagation();
+                    toggleNode(node);
+                };
+
+                // Toggle Triangle
+                if (node.children.length > 0) {
+                    const toggle = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    toggle.setAttribute("class", "toggle");
+                    toggle.setAttribute("d", node.expanded ? "M 0 10 L 10 10 L 5 18 Z" : "M 0 10 L 8 15 L 0 20 Z"); // Simple shapes
+                    toggle.setAttribute("transform", "translate(0, 0) scale(0.8)");
+                    toggle.onclick = (e) => {
+                        e.stopPropagation();
+                        toggleNode(node);
+                    };
+                    g.appendChild(toggle);
+                }
+
+                // Node Body
+                const textX = 15;
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", textX + 5);
+                text.setAttribute("y", 15);
+                text.textContent = `${node.name} (${node.count})`;
+
+                // Color mapping
+                let fill = "var(--node-bg-element)";
+                if (node.type === "text") fill = "var(--node-bg-text)";
+                if (node.type === "comment") fill = "var(--node-bg-comment)";
+                if (node.type === "root") fill = "#e0e0e0";
+
+                // Background rect
+                const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                rect.setAttribute("x", textX);
+                rect.setAttribute("y", 2);
+                rect.setAttribute("width", Math.max(100, node.name.length * 9 + 50));
+                rect.setAttribute("height", 26);
+                rect.setAttribute("fill", fill);
+
+                g.appendChild(rect);
+                g.appendChild(text);
+
+                gNodes.appendChild(g);
+            });
+        }
+
+        function toggleNode(node) {
+            node.expanded = !node.expanded;
+            render();
+        }
+
+        function selectNode(node) {
+            // Deselect all
+            function clear(n) { n.selected = false; n.children.forEach(clear); }
+            clear(treeRoot);
+
+            node.selected = true;
+            sidebar.style.display = 'block';
+            details.textContent = JSON.stringify({
+                name: node.name,
+                type: node.type,
+                count: node.count,
+                children_count: node.children.length
+            }, null, 2);
+            render();
+        }
+
+        // --- Pan & Zoom ---
+        function updateTransform() {
+            gTransform.setAttribute("transform", `translate(${transform.x}, ${transform.y}) scale(${transform.scale})`);
+        }
+
+        container.onmousedown = (e) => {
+            isDragging = true;
+            lastMouse = { x: e.clientX, y: e.clientY };
+        };
+        window.onmouseup = () => isDragging = false;
+        window.onmousemove = (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - lastMouse.x;
+            const dy = e.clientY - lastMouse.y;
+            transform.x += dx;
+            transform.y += dy;
+            lastMouse = { x: e.clientX, y: e.clientY };
+            updateTransform();
+        };
+        container.onwheel = (e) => {
+            e.preventDefault();
+            const scaleAmount = -e.deltaY * 0.001;
+            transform.scale = Math.max(0.1, Math.min(5, transform.scale * (1 + scaleAmount)));
+            updateTransform();
+        };
+
+        // Init
+        render();
+
+    </script>
+</body>
+
+</html>

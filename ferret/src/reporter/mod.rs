@@ -1,11 +1,13 @@
 use crate::analyzer::AnalysisResult;
 use colored::*;
+use std::fmt::Write;
 
 pub struct TreeDisplay;
 
 impl TreeDisplay {
-    pub fn render(report: &AnalysisResult) {
-        println!("📦 Files analyzed: {}", report.files_analyzed);
+    pub fn render(report: &AnalysisResult) -> String {
+        let mut out = String::new();
+        writeln!(out, "📦 Files analyzed: {}", report.files_analyzed).unwrap();
 
         // Sort tags by count desc
         let mut sorted_tags: Vec<_> = report.tags.values().collect();
@@ -19,12 +21,14 @@ impl TreeDisplay {
                 "├── "
             };
 
-            println!(
+            writeln!(
+                out,
                 "{}{}{}",
                 tag_prefix,
                 tag.name.bright_cyan(),
                 format!(" ({})", tag.count).yellow()
-            );
+            )
+            .unwrap();
 
             // Sort attributes by count desc
             let mut sorted_attrs: Vec<_> = tag.attributes.values().collect();
@@ -40,13 +44,15 @@ impl TreeDisplay {
                     "├── "
                 };
 
-                println!(
+                writeln!(
+                    out,
                     "{}{}@{}{}",
                     child_indent,
                     attr_prefix,
                     attr.name,
                     format!(" ({})", attr.count).dimmed()
-                );
+                )
+                .unwrap();
 
                 // Print top values
                 let val_indent = if is_last_attr { "    " } else { "│   " };
@@ -61,59 +67,74 @@ impl TreeDisplay {
                         "└── "
                     } else {
                         "├── "
-                    }; // Simple tree, might need adjusting logic
-                       // The user example shows `├── ── val` logic.
-                       // Copying user's style:
-                       // ├── @class
-                       // │   ├── ── container
+                    };
 
-                    println!(
+                    writeln!(
+                        out,
                         "{}{}{} {} ({})",
                         full_val_indent,
                         val_prefix,
-                        "──".dimmed(), // User's style extra dash
+                        "──".dimmed(),
                         val,
                         count
-                    );
+                    )
+                    .unwrap();
                 }
             }
         }
+        out
     }
 }
 
 pub struct FlatDisplay;
 
 impl FlatDisplay {
-    pub fn render(report: &AnalysisResult) {
-        println!("📦 Files analyzed: {}", report.files_analyzed);
+    pub fn render(report: &AnalysisResult) -> String {
+        let mut out = String::new();
+        writeln!(out, "📦 Files analyzed: {}", report.files_analyzed).unwrap();
 
         let mut sorted_tags: Vec<_> = report.tags.values().collect();
         sorted_tags.sort_by(|a, b| b.count.cmp(&a.count));
 
-        println!(
+        writeln!(
+            out,
             "{:<20} {:<10} {:<30} {:<10}",
             "TAG", "COUNT", "ATTRIBUTE", "ATTR COUNT"
-        );
-        println!("{}", "-".repeat(70));
+        )
+        .unwrap();
+        writeln!(out, "{}", "-".repeat(70)).unwrap();
 
         for tag in sorted_tags {
             if tag.attributes.is_empty() {
-                println!("{:<20} {:<10} {:<30} {:<10}", tag.name, tag.count, "-", "-");
+                writeln!(
+                    out,
+                    "{:<20} {:<10} {:<30} {:<10}",
+                    tag.name, tag.count, "-", "-"
+                )
+                .unwrap();
             } else {
                 let mut sorted_attrs: Vec<_> = tag.attributes.values().collect();
                 sorted_attrs.sort_by(|a, b| b.count.cmp(&a.count));
 
                 for (i, attr) in sorted_attrs.iter().enumerate() {
                     if i == 0 {
-                        println!(
+                        writeln!(
+                            out,
                             "{:<20} {:<10} {:<30} {:<10}",
                             tag.name, tag.count, attr.name, attr.count
-                        );
+                        )
+                        .unwrap();
                     } else {
-                        println!("{:<20} {:<10} {:<30} {:<10}", "", "", attr.name, attr.count);
+                        writeln!(
+                            out,
+                            "{:<20} {:<10} {:<30} {:<10}",
+                            "", "", attr.name, attr.count
+                        )
+                        .unwrap();
                     }
                 }
             }
         }
+        out
     }
 }
