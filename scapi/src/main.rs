@@ -223,9 +223,9 @@ fn analyze_html(html: &str) -> Result<AnalysisResult> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let port = std::env::var("PORT").unwrap_or_else(|_| "80".to_string());
+    let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
     let port = port.parse::<u16>()?;
-    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
 
     println!("Ferret Axum Server listening on {}", addr);
 
