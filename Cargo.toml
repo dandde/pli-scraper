@@ -60,6 +60,8 @@ tokio = { git = "https://github.com/wasix-org/tokio.git", branch = "epoll" }
 rustls = { git = "https://github.com/wasix-org/rustls.git", branch = "v0.21.5" }
 hyper = { git = "https://github.com/wasix-org/hyper.git", branch = "v0.14.27" }
 ring = { git = "https://github.com/wasix-org/ring.git", branch = "wasix" }
+rustls-webpki = { git = "https://github.com/wasix-org/webpki.git", branch = "wasix" }
+webpki-roots = { git = "https://github.com/wasix-org/webpki-roots.git", branch = "wasix" }
 
 [profile.release]
 opt-level = 3
