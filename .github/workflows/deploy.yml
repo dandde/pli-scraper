@@ -1,0 +1,55 @@
+name: Deploy App
+
+on:
+  push:
+    branches: ["master", "main"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Wasmer
+        uses: wasmerio/setup-wasmer@v3.1
+        with:
+          token: ${{ secrets.WASMER_TOKEN }}
+
+      - name: Deploy to Wasmer
+        working-directory: scapi
+        run: wasmer deploy --non-interactive --no-wait
+        env:
+          WASMER_TOKEN: ${{ secrets.WASMER_TOKEN }}
+
+  deploy-frontend:
+    needs: deploy-backend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: frontend
+        run: npm run build
+        env:
+          VITE_API_URL: https://imake1010-scapi.wasmer.app/api # Assuming this URL structure
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: frontend/dist
+          branch: gh-pages

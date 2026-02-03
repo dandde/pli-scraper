@@ -28,7 +28,8 @@ function App() {
       // /api/report/https://example.com
       // Axum *url will capture "https://example.com".
 
-      const endpoint = `http://localhost:3000/api/report/${url}`;
+      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const endpoint = `${apiBase}/api/report/${url}`;
       const response = await fetch(endpoint);
 
       if (!response.ok) {

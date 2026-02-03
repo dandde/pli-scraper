@@ -11,7 +11,11 @@ license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
 # HTTP client for URL fetching
-reqwest = "0.11"
+reqwest = { git = "https://github.com/wasix-org/reqwest.git", default-features = false, features = [
+    "blocking",
+    "rustls-tls",
+    "json",
+] }
 
 # XML/HTML Parsing
 quick-xml = "0.31" # For StreamAnalyzer (streaming parser)
@@ -27,19 +31,29 @@ serde_json = "1.0"
 csv = "1.4"
 
 # Async runtime
-tokio = { version = "1.35", features = ["full"] }
+tokio = { version = "=1.24.2", git = "https://github.com/wasix-org/tokio.git", branch = "epoll", default-features = false, features = [
+    "rt-multi-thread",
+    "macros",
+    "fs",
+    "io-util",
+    "net",
+    "signal",
+    "full",
+] }
 
 # For batch/concurrent operations
 futures = "0.3"
 
 # utils
-colored = "3.1"
+colored = "2"
 indicatif = "0.17"
 askama = { version = "0.12", features = ["serde-json"] }
-
+axum = { version = "0.6", features = ["macros"] }
+tower-http = { version = "0.4", features = ["cors", "trace"] }
 
 # wasm
 wasm-bindgen = "0.2"
+
 
 [profile.release]
 opt-level = 3
