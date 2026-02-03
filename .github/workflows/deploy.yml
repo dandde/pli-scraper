@@ -19,6 +19,23 @@ jobs:
         with:
           token: ${{ secrets.WASMER_TOKEN }}
 
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown
+
+      - name: Install cargo-wasix
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          cargo install cargo-wasix
+
+      - name: Build WASM
+        working-directory: scapi
+        run: |
+          cargo wasix build --release
+          cp target/wasm32-wasmer-wasi/release/scapi.wasm .
+
       - name: Deploy to Wasmer
         working-directory: scapi
         run: wasmer deploy --non-interactive --no-wait --owner imake1010
