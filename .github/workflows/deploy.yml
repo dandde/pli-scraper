@@ -1,4 +1,4 @@
-name: Deploy App
+name: Build & Deploy
 
 on:
   push:
@@ -9,46 +9,28 @@ permissions:
   contents: write
 
 jobs:
-  deploy-backend:
+  build-backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Install Wasmer
-        uses: wasmerio/setup-wasmer@v3.1
-        with:
-          token: ${{ secrets.WASMER_TOKEN }}
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
-          target: wasm32-unknown-unknown
 
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y lld clang build-essential gcc-multilib libc6-dev-i386
-
-      - name: Install cargo-wasix
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          cargo install cargo-wasix
-
-      - name: Build WASM
+      - name: Build Backend (Release)
         working-directory: scapi
-        run: |
-          cargo wasix build --release
-          cp target/wasm32-wasmer-wasi/release/scapi.wasm .
+        run: cargo build --release
 
-      - name: Deploy to Wasmer
-        working-directory: scapi
-        run: wasmer deploy --non-interactive --no-wait --owner imake1010
-        env:
-          WASMER_TOKEN: ${{ secrets.WASMER_TOKEN }}
+      - name: Upload Backend Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: scapi-linux-binary
+          path: target/release/scapi
 
   deploy-frontend:
-    needs: deploy-backend
+    needs: build-backend
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -67,8 +49,8 @@ jobs:
       - name: Build Frontend
         working-directory: frontend
         run: npm run build
-        env:
-          VITE_API_URL: https://imake1010-scapi.wasmer.app/api # Assuming this URL structure
+        # VITE_API_URL is left undefined here. 
+        # The frontend will fallback to its default (localhost:3000) or can be configured for a specific deployed backend later.
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4

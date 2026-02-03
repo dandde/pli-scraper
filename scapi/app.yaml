@@ -1,4 +1,0 @@
-name: scapi-pli-scraper
-owner: imake1010
-package: .
-kind: wasmer.io/App.v0
