@@ -7,19 +7,24 @@
     <title>Ferret Graph Visualizer</title>
     <style>
         :root {
-            --bg-color: #ffffff;
-            --text-color: #333333;
-            --line-color: #bec3c7;
-            --node-bg-element: rgb(206, 224, 244);
-            --node-bg-text: rgb(255, 222, 153);
-            --node-bg-comment: rgb(207, 206, 149);
-            --node-selected-border: #2196f3;
+            /* E-Ink Palette */
+            --bg-color: #F4F4F1;
+            --text-color: #111111;
+            --line-color: #333333;
+
+            /* High Contrast Nodes */
+            --node-bg-element: #FFFFFF;
+            --node-bg-text: #EAEAE5;
+            --node-bg-comment: #F0F0F0;
+
+            --node-border: #000000;
+            --node-selected-border: #000000;
         }
 
         body {
             margin: 0;
             overflow: hidden;
-            font-family: Consolas, Menlo, Monaco, monospace;
+            font-family: "Helvetica Neue", "Arial", sans-serif;
             font-size: 14px;
             background: var(--bg-color);
             color: var(--text-color);
@@ -33,12 +38,13 @@
 
         #sidebar {
             width: 300px;
-            border-right: 1px solid #ddd;
-            padding: 10px;
+            border-right: 1px solid var(--node-border);
+            padding: 1rem;
             overflow-y: auto;
-            background: #f8f9fa;
+            background: #FFFFFF;
             z-index: 10;
             display: none;
+            font-family: "Georgia", serif;
         }
 
         #canvas-container {
@@ -59,39 +65,51 @@
         }
 
         .node rect {
-            stroke: none;
-            rx: 4;
+            stroke: var(--node-border);
+            stroke-width: 1px;
+            rx: 0;
+            /* Sharp corners */
             transition: stroke-width 0.1s;
         }
 
         .node.selected rect {
-            stroke: var(--node-selected-border);
-            stroke-width: 2px;
+            stroke-width: 3px;
+            fill: #333 !important;
+        }
+
+        .node.selected text {
+            fill: white;
         }
 
         .node text {
             pointer-events: none;
             dominant-baseline: middle;
+            font-family: "Consolas", monospace;
+            fill: var(--text-color);
         }
 
         .link {
             fill: none;
             stroke: var(--line-color);
-            stroke-width: 1.5px;
+            stroke-width: 1px;
         }
 
         .toggle {
             cursor: pointer;
-            fill: #666;
+            fill: #111;
         }
 
         .toggle:hover {
-            fill: #333;
+            fill: #666;
         }
 
-        /* Utility */
         .hidden {
             display: none;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
     </style>
 </head>
@@ -143,7 +161,7 @@
                     const attrNode = {
                         id: `attr-${tagName}-${attrName}`,
                         name: `@${attrName}`,
-                        type: "comment", // Use comment color for attrs roughly
+                        type: "comment",
                         count: attrStat.count,
                         children: [],
                         expanded: false
@@ -155,7 +173,7 @@
                         attrNode.children.push({
                             id: `val-${tagName}-${attrName}-${idx}`,
                             name: `"${val}"`,
-                            type: "text", // Use text color for values
+                            type: "text",
                             count: count,
                             children: [] // Leaf
                         });
@@ -221,18 +239,9 @@
             // Render Links (L-shaped)
             visibleNodes.forEach(child => {
                 if (child === treeRoot) return;
-
-                // Find parent in visibleNodes is hard because we flattened traversal?
-                // Actually we need parent reference. 
-                // Let's assume parent is available or we can look it up. 
-                // Simple hack: traverse passes parent down, we store it.
             });
 
             // Re-traverse to draw based on current positions
-            // Drawing lines requires knowing parent's position. 
-            // Let's add parent ref during transform or flatten.
-
-            // Quick fix for parent ref:
             function linkNodes(node) {
                 if (node.expanded) {
                     node.children.forEach(child => {
@@ -246,25 +255,17 @@
             visibleNodes.forEach(node => {
                 if (node.parent && visibleNodes.includes(node.parent)) {
                     // Draw L-shape
-                    // Start: Parent Toggle (Parent X - some offset usually, or bottom of parent?)
-                    // Design says: Parent's toggle point -> drop vertical -> shoot horizontal
-
-                    const pX = node.parent.x + 6; // Center of toggle roughly
-                    const pY = node.parent.y + 20; // Bottom of text line
+                    const pX = node.parent.x + 6;
+                    const pY = node.parent.y + 20;
                     const cX = node.x - 10;
-                    const cY = node.y + 10; // Mid of row
-
-                    // Correct Logic: 
-                    // Vertical line from Parent Y+Offset down to Child Y
-                    // Horizontal line to Child X
+                    const cY = node.y + 10;
 
                     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                     path.setAttribute("class", "link");
-                    // Simple L: (Parent X + adjust, Parent Y + adjust) -> (Parent X + adjust, Child Y + adjust) -> (Child X, Child Y + adjust)
-                    // Visual alignment tuning needed.
+
                     const vertX = node.parent.x + 6;
                     const startY = node.parent.y + 20;
-                    const endY = node.y + 15; // Center of row roughly
+                    const endY = node.y + 15;
 
                     const d = `M ${vertX} ${startY} L ${vertX} ${endY} L ${node.x} ${endY}`;
                     path.setAttribute("d", d);
@@ -284,31 +285,53 @@
                     toggleNode(node);
                 };
 
-                // Toggle Triangle
+                // Toggle Triangle - Enlarged & Interactive
                 if (node.children.length > 0) {
                     const toggle = document.createElementNS("http://www.w3.org/2000/svg", "path");
                     toggle.setAttribute("class", "toggle");
-                    toggle.setAttribute("d", node.expanded ? "M 0 10 L 10 10 L 5 18 Z" : "M 0 10 L 8 15 L 0 20 Z"); // Simple shapes
-                    toggle.setAttribute("transform", "translate(0, 0) scale(0.8)");
+                    // Larger hit area and shape
+                    // Expanded: Down pointing triangle
+                    // Collapsed: Right pointing triangle
+                    toggle.setAttribute("d", node.expanded
+                        ? "M -4 8 L 4 8 L 0 16 Z"  // Down 
+                        : "M -2 6 L 6 12 L -2 18 Z"); // Right
+
+                    toggle.setAttribute("transform", "translate(6, 4) scale(1.2)");
+
+                    // Add invisible hit rect for easier clicking
+                    const hitRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    hitRect.setAttribute("x", -10);
+                    hitRect.setAttribute("y", 0);
+                    hitRect.setAttribute("width", 30);
+                    hitRect.setAttribute("height", 30);
+                    hitRect.setAttribute("fill", "transparent");
+                    hitRect.setAttribute("cursor", "pointer");
+                    hitRect.onclick = (e) => {
+                        e.stopPropagation();
+                        toggleNode(node);
+                    };
+
                     toggle.onclick = (e) => {
                         e.stopPropagation();
                         toggleNode(node);
                     };
+
                     g.appendChild(toggle);
+                    g.appendChild(hitRect);
                 }
 
                 // Node Body
-                const textX = 15;
+                const textX = 20;
                 const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", textX + 5);
+                text.setAttribute("x", textX + 8);
                 text.setAttribute("y", 15);
                 text.textContent = `${node.name} (${node.count})`;
 
-                // Color mapping
+                // Color mapping - Monochrome
                 let fill = "var(--node-bg-element)";
                 if (node.type === "text") fill = "var(--node-bg-text)";
                 if (node.type === "comment") fill = "var(--node-bg-comment)";
-                if (node.type === "root") fill = "#e0e0e0";
+                if (node.type === "root") fill = "#DDDDDD";
 
                 // Background rect
                 const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -331,7 +354,6 @@
         }
 
         function selectNode(node) {
-            // Deselect all
             function clear(n) { n.selected = false; n.children.forEach(clear); }
             clear(treeRoot);
 

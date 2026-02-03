@@ -9,25 +9,15 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<AnalysisResult | null>(null);
+  const [currentUrl, setCurrentUrl] = useState<string>('');
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   const analyzeUrl = async (url: string) => {
     setIsLoading(true);
     setData(null);
+    setCurrentUrl(url); // Store the URL being analyzed
     try {
-      // Ensure URL is encoded
-      // Need strict check for protocol in frontend or backend? Backend checks.
-      // But passing encoded url to backend:
-      // http://localhost:3000/api/report/https://example.com
-      // Wait, my backend implementation in main.rs:
-      // .route("/api/report/*url", get(handler_report))
-      // Path<String> will capture the rest.
-      // If I encode it, say http%3A%2F%2F..., axum might treat it as one segment or decode it?
-      // If I don't encode it:
-      // /api/report/https://example.com
-      // Axum *url will capture "https://example.com".
-
       const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000';
       const endpoint = `${apiBase}/api/report/${url}`;
       const response = await fetch(endpoint);
@@ -56,7 +46,7 @@ function App() {
           isLoading={isLoading}
           data={data}
         />
-        <MainContent />
+        <MainContent data={data} currentUrl={currentUrl} />
       </div>
     </div>
   );

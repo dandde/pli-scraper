@@ -1,16 +1,20 @@
 :root {
-  --color-primary: #9E7B4F;
-  --color-primary-hover: #8C6A40;
-  --color-bg: #F9F8F6;
+  /* E-Ink / Paper Palette */
+  --color-primary: #000000;
+  --color-primary-hover: #333333;
+  --color-bg: #F4F4F1;
+  /* Warm paper-like off-white */
   --color-surface: #FFFFFF;
-  --color-text: #2C2C2C;
-  --color-text-muted: #666666;
-  --color-border: #E5E5E5;
+  --color-text: #111111;
+  --color-text-muted: #555555;
+  --color-border: #000000;
+  /* High contrast borders */
 
-  --font-serif: "Garamond", "Georgia", serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  /* Typography */
+  --font-serif: "Georgia", "Times New Roman", serif;
+  --font-sans: "Helvetica Neue", "Arial", sans-serif;
 
-  --transition-speed: 0.3s;
+  --border-width: 1px;
 }
 
 body {
@@ -19,13 +23,21 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-serif);
-  font-weight: 600;
+  font-weight: normal;
+  /* E-ink often uses regular weight for sharpness */
   color: var(--color-primary);
   margin: 0;
+  letter-spacing: -0.02em;
 }
 
 button {
@@ -33,14 +45,17 @@ button {
   border: none;
   cursor: pointer;
   font-family: inherit;
+  color: inherit;
 }
 
 input {
   font-family: inherit;
+  color: inherit;
 }
 
 .icon {
   width: 1.25rem;
   height: 1.25rem;
-  stroke-width: 2;
+  stroke-width: 1.5;
+  /* Thinner lines */
 }

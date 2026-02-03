@@ -196,7 +196,7 @@ async fn handler_export(
                 .header("Content-Type", content_type)
                 .header(
                     "Content-Disposition",
-                    format!("attachment; filename=\"report.{}\"", extension),
+                    format!("inline; filename=\"report.{}\"", extension),
                 )
                 .body(axum::body::Body::from(content))
                 .unwrap()
