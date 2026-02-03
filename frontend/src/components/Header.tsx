@@ -13,7 +13,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
                 <button onClick={onToggleSidebar} className="menu-btn" title="Toggle Sidebar">
                     <Menu className="icon" />
                 </button>
-                <span className="app-title">Scapi / Frontend</span>
+                <span className="app-title">Scapi-Scraper</span>
             </div>
             <div className="header-right">
                 {/* Placeholder for actions */}
