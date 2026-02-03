@@ -21,7 +21,7 @@ jobs:
 
       - name: Deploy to Wasmer
         working-directory: scapi
-        run: wasmer deploy --non-interactive --no-wait
+        run: wasmer deploy --non-interactive --no-wait --owner imake1010
         env:
           WASMER_TOKEN: ${{ secrets.WASMER_TOKEN }}
 

@@ -12,6 +12,6 @@ wasmer build
 # 2. Deploy to Wasmer Edge
 # This uploads the package (and the built scapi.wasm) to Wasmer's cloud.
 echo "Running 'wasmer deploy'..."
-wasmer deploy --non-interactive
+wasmer deploy --non-interactive --owner imake1010
 
 echo "Done!"
