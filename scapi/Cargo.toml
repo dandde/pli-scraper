@@ -5,8 +5,8 @@ edition = "2021"
 
 [dependencies]
 ferret = { path = "../ferret" }
-axum = { version = "0.7", features = ["macros"] }
-tower-http = { version = "0.5", features = ["cors", "trace"] }
+axum = { workspace = true, features = ["macros"] }
+tower-http = { workspace = true, features = ["cors", "trace"] }
 tokio = { workspace = true, features = ["full"] }
 reqwest = { workspace = true, features = ["json", "rustls-tls"] }
 serde = { workspace = true, features = ["derive"] }

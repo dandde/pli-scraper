@@ -239,8 +239,9 @@ async fn main() -> Result<()> {
         .route("/api/export/*url", get(handler_export))
         .layer(cors);
 
-    let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app).await?;
+    axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await?;
 
     Ok(())
 }
