@@ -1,6 +1,7 @@
 .header {
     height: 60px;
-    background-color: var(--color-surface);
+    background-color: #EAEAE5;
+    /*var(--color-chrome-bg);*/
     border-bottom: var(--border-width) solid var(--color-border);
     display: flex;
     align-items: center;

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Code, FileCode, Network } from 'lucide-react';
+import { Table, Code, Network } from 'lucide-react';
+import ReactJson from 'react-json-view';
 import type { AnalysisResult } from '../types';
 import './MainContent.css';
 
@@ -44,7 +45,7 @@ export const MainContent: React.FC<MainContentProps> = ({ data, currentUrl }) =>
                         </div>
                         <div className="feature-item">
                             <h3>Export Data</h3>
-                            <p>View reports in CSV, HTML, JSON, Graphviz format.</p>
+                            <p>View reports in CSV, JSON, Graphviz format.</p>
                         </div>
                     </div>
                 </div>
@@ -54,6 +55,26 @@ export const MainContent: React.FC<MainContentProps> = ({ data, currentUrl }) =>
 
     const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000';
     const iframeSrc = (format: string) => `${apiBase}/api/export/${currentUrl}?format=${format}`;
+
+    // E-Ink Theme for ReactJson
+    const eInkTheme = {
+        base00: "transparent", // Background
+        base01: "#eeeeee", // Edit background (not used)
+        base02: "#e0e0e0", // Selection?
+        base03: "#666666", // Comments?
+        base04: "#333333", // Item count?
+        base05: "#111111", // Default text (keys)
+        base06: "#111111", // Commands?
+        base07: "#000000", // Keys?
+        base08: "#333333", // Keys? (actually varied)
+        base09: "#222222", // Values (String)
+        base0A: "#000000", // Null/Bool
+        base0B: "#222222", // Float/Int
+        base0C: "#333333", // Arrays
+        base0D: "#111111", // Keys (standard)
+        base0E: "#444444", // Expanders
+        base0F: "#222222"  // Regex?
+    };
 
     return (
         <main className="main-content">
@@ -73,9 +94,19 @@ export const MainContent: React.FC<MainContentProps> = ({ data, currentUrl }) =>
 
             <div className="view-container">
                 {view === 'json' && (
-                    <pre className="code-view">
-                        <code>{JSON.stringify(data, null, 2)}</code>
-                    </pre>
+                    <div className="code-view">
+                        <ReactJson
+                            src={data}
+                            name={false}
+                            theme={eInkTheme}
+                            iconStyle="triangle"
+                            enableClipboard={true}
+                            displayDataTypes={false}
+                            displayObjectSize={true}
+                            collapsed={2}
+                            style={{ fontFamily: "'Fira Code', 'Menlo', monospace", fontSize: '0.9rem', backgroundColor: 'transparent' }}
+                        />
+                    </div>
                 )}
 
                 {view === 'csv' && (

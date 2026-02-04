@@ -10,6 +10,9 @@
   --color-border: #000000;
   /* High contrast borders */
 
+  --color-chrome-bg: #EAEAE5;
+  /* Darker paper tone for UI Chrome */
+
   /* Typography */
   --font-serif: "Georgia", "Times New Roman", serif;
   --font-sans: "Helvetica Neue", "Arial", sans-serif;

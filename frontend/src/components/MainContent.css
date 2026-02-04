@@ -3,7 +3,8 @@
     flex: 1;
     padding: 3rem;
     overflow-y: auto;
-    background-color: var(--color-bg);
+    background-color: var(--color-surface);
+    /* Pure white paper */
     display: flex;
     flex-direction: column;
 }
